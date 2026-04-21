@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-04-21T12:53:23Z",
+  "generatedAt": "2026-04-21T12:54:41Z",
   "bundles": [
     {
       "name": "gitea",
@@ -24,8 +24,16 @@
     },
     {
       "name": "gitlab",
-      "latest": null,
-      "versions": [],
+      "latest": "0.0.1",
+      "versions": [
+        {
+          "version": "0.0.1",
+          "ociRef": "ghcr.io/crmarques/declarest-metadata-bundles/gitlab:0.0.1",
+          "digest": "sha256:4de10f190085ddf4b0863b4a9d0f59bd11278ec56cb67d64b1f03037188f6761",
+          "tarballSha256": "f30d737418cf96a3c3b222a9f1f4f52dce8466b4f7fc5256f5427eaa2c103a98",
+          "releasedAt": "2026-04-21T12:54:41Z"
+        }
+      ],
       "description": "Metadata bundle for the GitLab REST Admin API (users, groups, projects, and their member/permission management).",
       "compatibleDeclarest": ">=0.1.0",
       "compatibleManagedService": {
