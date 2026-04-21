@@ -41,12 +41,10 @@ Tag format: `bundle/<name>/v<X.Y.Z>[-prerelease][+build]`.
 
 ## GHCR package permissions
 
-`release-bundle.yml` logs in to GHCR with `GITHUB_TOKEN` by default. If GHCR
+`release-bundle.yml` logs in to GHCR with the workflow `GITHUB_TOKEN`. If GHCR
 returns `permission_denied: write_package` for an existing package that is not
-linked to this repository, grant this repository Actions access to the package,
-delete and recreate the package from this workflow, or configure a `GHCR_TOKEN`
-secret with `write:packages` access and, when the token owner differs from the
-workflow actor, a matching `GHCR_USERNAME` secret.
+linked to this repository, grant this repository Actions access to the package
+or delete and recreate the package from this workflow.
 
 ## Quickstart — local
 
@@ -84,6 +82,6 @@ The bundle manifest schema is owned by the declarest repo at
 `schemas/bundle.schema.json`. This monorepo vendors a snapshot; a weekly
 workflow opens a PR when declarest diverges. See
 [docs/adr/0003-schema-vendoring-strategy.md](docs/adr/0003-schema-vendoring-strategy.md).
-If the repository disables pull-request creation by `GITHUB_TOKEN`, configure
-a `SCHEMA_DRIFT_PR_TOKEN` secret with contents and pull-request write access,
-or use the workflow summary link to open the pushed drift branch manually.
+If the repository disables pull-request creation by `GITHUB_TOKEN`, enable
+Actions pull-request creation or use the workflow summary link to open the
+pushed drift branch manually.

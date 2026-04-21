@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - name: Set up Python
         uses: actions/setup-python@v6.2.0
@@ -87,7 +87,7 @@ jobs:
       - name: Publish GitHub Release asset
         if: github.event_name == 'push'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.parse.outputs.tag }}
           NAME: ${{ steps.parse.outputs.name }}
           VERSION: ${{ steps.parse.outputs.version }}
@@ -100,15 +100,12 @@ jobs:
 
       - name: Log in to GHCR
         env:
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME || github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
-          GHCR_TOKEN_SOURCE: ${{ secrets.GHCR_TOKEN != '' && 'GHCR_TOKEN' || 'GITHUB_TOKEN' }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          echo "logging in to GHCR with ${GHCR_TOKEN_SOURCE}"
-          if [[ "${GHCR_TOKEN_SOURCE}" == "GITHUB_TOKEN" ]]; then
-            echo "::notice::GITHUB_TOKEN can only write GHCR packages linked to this repository. If this publish fails with write_package, configure GHCR_TOKEN with write:packages or grant this repository Actions access to the package."
-          fi
+          echo "logging in to GHCR with GITHUB_TOKEN"
+          echo "::notice::GITHUB_TOKEN can only write GHCR packages linked to this repository. If this publish fails with write_package, grant this repository Actions access to the package."
           printf '%s' "${GHCR_TOKEN}" | oras login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 
       - name: Push OCI artifact
@@ -117,7 +114,6 @@ jobs:
           NAME: ${{ steps.parse.outputs.name }}
           VERSION: ${{ steps.parse.outputs.version }}
           REGISTRY: ghcr.io/${{ github.repository_owner }}
-          GHCR_TOKEN_SOURCE: ${{ secrets.GHCR_TOKEN != '' && 'GHCR_TOKEN' || 'GITHUB_TOKEN' }}
         run: |
           set -euo pipefail
           ./tools/bundle-publish.sh "${NAME}" --version "${VERSION}" --registry "${REGISTRY}" --input-dir out | tee publish.log
@@ -150,7 +146,7 @@ jobs:
       - name: Commit index.json back to main
         if: github.event_name == 'push'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           NAME: ${{ steps.parse.outputs.name }}
           VERSION: ${{ steps.parse.outputs.version }}
         run: |

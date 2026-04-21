@@ -34,7 +34,7 @@ jobs:
 
       - name: Open PR on drift
         env:
-          GH_TOKEN: ${{ secrets.SCHEMA_DRIFT_PR_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if git diff --quiet schemas/; then
@@ -83,5 +83,5 @@ jobs:
             echo "- Branch: \`${branch}\`"
             echo "- Open PR: ${pr_url}"
             echo
-            echo "To fully automate PR creation, enable Actions PR creation for the repository or configure \`SCHEMA_DRIFT_PR_TOKEN\` with contents and pull-request write access."
+            echo "To fully automate PR creation, enable Actions PR creation for the repository."
           } >> "${GITHUB_STEP_SUMMARY}"
