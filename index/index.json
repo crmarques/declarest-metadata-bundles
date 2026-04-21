@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-04-21T01:38:36Z",
+  "generatedAt": "2026-04-21T01:39:17Z",
   "bundles": [
     {
       "name": "haproxy",
@@ -44,8 +44,16 @@
     },
     {
       "name": "rundeck",
-      "latest": null,
-      "versions": [],
+      "latest": "0.0.1",
+      "versions": [
+        {
+          "version": "0.0.1",
+          "ociRef": "ghcr.io/crmarques/declarest-metadata-bundles/rundeck:0.0.1",
+          "digest": "sha256:af7b60d718cf8f80ecf890718c0dd4bb17d813c0d5798b79e3f3094807fd4a1d",
+          "tarballSha256": "e9b879bf59217704a00bbdb9c6d1483e21f9e4166ff3742b9b42a2386d881673",
+          "releasedAt": "2026-04-21T01:39:17Z"
+        }
+      ],
       "description": "Metadata bundle for Rundeck project, job, node, and key storage APIs.",
       "compatibleDeclarest": ">=0.1.0",
       "compatibleManagedService": {
