@@ -1,7 +1,39 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-04-21T01:39:17Z",
+  "generatedAt": "2026-04-21T12:53:23Z",
   "bundles": [
+    {
+      "name": "gitea",
+      "latest": "0.0.1",
+      "versions": [
+        {
+          "version": "0.0.1",
+          "ociRef": "ghcr.io/crmarques/declarest-metadata-bundles/gitea:0.0.1",
+          "digest": "sha256:a3e683fb664b20085027f86fde7dedd39dc902b2faf6776fc0d4d98691915be7",
+          "tarballSha256": "4ec8b0461d836a23ec4fd4ad3c50a6e316e838b091d26004a38abb68ccf5b473",
+          "releasedAt": "2026-04-21T12:53:23Z"
+        }
+      ],
+      "description": "Metadata bundle for the Gitea Admin REST API (users, organizations, teams, repositories, collaborators, and system hooks).",
+      "compatibleDeclarest": ">=0.1.0",
+      "compatibleManagedService": {
+        "product": "gitea",
+        "versions": ">=1.26.0 <1.27.0"
+      },
+      "deprecated": false
+    },
+    {
+      "name": "gitlab",
+      "latest": null,
+      "versions": [],
+      "description": "Metadata bundle for the GitLab REST Admin API (users, groups, projects, and their member/permission management).",
+      "compatibleDeclarest": ">=0.1.0",
+      "compatibleManagedService": {
+        "product": "gitlab",
+        "versions": ">=18.10.0 <19.0.0"
+      },
+      "deprecated": false
+    },
     {
       "name": "haproxy",
       "latest": "0.0.1",
