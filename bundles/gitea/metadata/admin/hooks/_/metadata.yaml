@@ -1,0 +1,18 @@
+resource:
+  id: "{{/id}}"
+  alias: "{{/id}}"
+operations:
+  create:
+    method: POST
+    path: /admin/hooks
+  get:
+    path: /admin/hooks/{{/id}}
+  update:
+    method: PATCH
+    path: /admin/hooks/{{/id}}
+  delete:
+    path: /admin/hooks/{{/id}}
+  list:
+    path: /admin/hooks
+  compare:
+    path: /admin/hooks/{{/id}}

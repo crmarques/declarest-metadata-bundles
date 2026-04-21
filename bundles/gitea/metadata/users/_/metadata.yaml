@@ -1,0 +1,20 @@
+resource:
+  id: "{{/login}}"
+  alias: "{{/login}}"
+  secretAttributes:
+  - /password
+operations:
+  create:
+    method: POST
+    path: /admin/users
+  get:
+    path: /users/{{/id}}
+  update:
+    method: PATCH
+    path: /admin/users/{{/id}}
+  delete:
+    path: /admin/users/{{/id}}
+  list:
+    path: /admin/users
+  compare:
+    path: /users/{{/id}}

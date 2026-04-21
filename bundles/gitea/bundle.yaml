@@ -1,0 +1,15 @@
+apiVersion: declarest.io/v1alpha1
+kind: MetadataBundle
+name: gitea
+version: 0.1.0
+description: Metadata bundle for the Gitea Admin REST API (users, organizations, teams, repositories, collaborators, and system hooks).
+deprecated: false
+declarest:
+  metadataRoot: metadata
+  openapi: openapi.yaml
+  compatibleDeclarest: ">=0.1.0"
+  compatibleManagedService:
+    product: gitea
+    versions: ">=1.26.0 <1.27.0"
+distribution:
+  artifactTemplate: "gitea-{version}.tar.gz"

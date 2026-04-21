@@ -1,0 +1,17 @@
+resource:
+  id: "{{/login}}"
+  alias: "{{/login}}"
+  remoteCollectionPath: /teams/{{/team}}/members
+operations:
+  create:
+    method: PUT
+    path: ./{{/id}}
+  update:
+    method: PUT
+    path: ./{{/id}}
+  get:
+    path: ./{{/id}}
+  delete:
+    path: ./{{/id}}
+  compare:
+    path: ./{{/id}}

@@ -1,0 +1,18 @@
+resource:
+  id: "{{/name}}"
+  alias: "{{/name}}"
+operations:
+  create:
+    method: POST
+    path: /orgs/{{/org}}/repos
+  get:
+    path: /repos/{{/org}}/{{/id}}
+  update:
+    method: PATCH
+    path: /repos/{{/org}}/{{/id}}
+  delete:
+    path: /repos/{{/org}}/{{/id}}
+  list:
+    path: /orgs/{{/org}}/repos
+  compare:
+    path: /repos/{{/org}}/{{/id}}

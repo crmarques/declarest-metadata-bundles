@@ -1,0 +1,15 @@
+apiVersion: declarest.io/v1alpha1
+kind: MetadataBundle
+name: gitlab
+version: 0.1.0
+description: Metadata bundle for the GitLab REST Admin API (users, groups, projects, and their member/permission management).
+deprecated: false
+declarest:
+  metadataRoot: metadata
+  openapi: openapi.yaml
+  compatibleDeclarest: ">=0.1.0"
+  compatibleManagedService:
+    product: gitlab
+    versions: ">=18.10.0 <19.0.0"
+distribution:
+  artifactTemplate: "gitlab-{version}.tar.gz"

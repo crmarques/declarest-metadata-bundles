@@ -1,0 +1,17 @@
+resource:
+  id: "{{/name}}"
+  alias: "{{/name}}"
+  remoteCollectionPath: /teams/{{/team}}/repos
+operations:
+  create:
+    method: PUT
+    path: /teams/{{/team}}/repos/{{/org}}/{{/id}}
+  get:
+    path: /teams/{{/team}}/repos/{{/org}}/{{/id}}
+  update:
+    method: PUT
+    path: /teams/{{/team}}/repos/{{/org}}/{{/id}}
+  delete:
+    path: /teams/{{/team}}/repos/{{/org}}/{{/id}}
+  compare:
+    path: /teams/{{/team}}/repos/{{/org}}/{{/id}}

@@ -1,0 +1,6 @@
+resource:
+  id: "{{/id}}"
+  alias: "{{/id}}"
+  secretAttributes:
+  - /password
+  - /reset_password

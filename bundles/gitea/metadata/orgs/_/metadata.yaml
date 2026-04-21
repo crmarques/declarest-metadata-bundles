@@ -1,0 +1,6 @@
+resource:
+  id: "{{/username}}"
+  alias: "{{/username}}"
+operations:
+  update:
+    method: PATCH

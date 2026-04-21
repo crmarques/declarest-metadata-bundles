@@ -1,0 +1,4 @@
+resource:
+  id: "{{/id}}"
+  alias: "{{/id}}"
+  remoteCollectionPath: /projects/{{/project}}/members
