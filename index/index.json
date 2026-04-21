@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-04-20T21:10:59Z",
+  "bundles": [
+    {
+      "name": "haproxy",
+      "latest": null,
+      "versions": [],
+      "description": "Metadata bundle for HAProxy Data Plane API routing resources.",
+      "compatibleDeclarest": ">=0.1.0",
+      "compatibleManagedService": {
+        "product": "haproxy",
+        "versions": ">=3.0.0 <4.0.0"
+      },
+      "deprecated": false
+    },
+    {
+      "name": "keycloak",
+      "latest": null,
+      "versions": [],
+      "description": "Metadata bundle for Keycloak Admin REST API.",
+      "compatibleDeclarest": ">=0.1.0",
+      "compatibleManagedService": {
+        "product": "keycloak",
+        "versions": ">=26.0.0 <27.0.0"
+      },
+      "deprecated": false
+    },
+    {
+      "name": "rundeck",
+      "latest": null,
+      "versions": [],
+      "description": "Metadata bundle for Rundeck project, job, node, and key storage APIs.",
+      "compatibleDeclarest": ">=0.1.0",
+      "compatibleManagedService": {
+        "product": "rundeck",
+        "versions": ">=5.0.0 <6.0.0"
+      },
+      "deprecated": false
+    }
+  ]
+}

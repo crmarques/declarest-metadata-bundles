@@ -1,0 +1,15 @@
+apiVersion: declarest.io/v1alpha1
+kind: MetadataBundle
+name: haproxy
+version: 0.1.0
+description: Metadata bundle for HAProxy Data Plane API routing resources.
+deprecated: false
+declarest:
+  metadataRoot: metadata
+  openapi: openapi.yaml
+  compatibleDeclarest: ">=0.1.0"
+  compatibleManagedService:
+    product: haproxy
+    versions: ">=3.0.0 <4.0.0"
+distribution:
+  artifactTemplate: "haproxy-{version}.tar.gz"

@@ -1,0 +1,15 @@
+apiVersion: declarest.io/v1alpha1
+kind: MetadataBundle
+name: keycloak
+version: 0.1.0
+description: Metadata bundle for Keycloak Admin REST API.
+deprecated: false
+declarest:
+  metadataRoot: metadata
+  openapi: openapi.yaml
+  compatibleDeclarest: ">=0.1.0"
+  compatibleManagedService:
+    product: keycloak
+    versions: ">=26.0.0 <27.0.0"
+distribution:
+  artifactTemplate: "keycloak-{version}.tar.gz"

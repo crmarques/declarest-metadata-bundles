@@ -1,0 +1,169 @@
+name: Release Bundle
+
+on:
+  push:
+    tags:
+      - "bundle/*/v*"
+  workflow_dispatch:
+    inputs:
+      bundle:
+        description: Bundle name (directory under bundles/)
+        required: true
+        type: string
+      version:
+        description: Bundle version (no leading v)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14.4"
+
+      - name: Install Python deps
+        run: pip install --disable-pip-version-check --requirement requirements.txt
+
+      - name: Set up oras
+        uses: oras-project/setup-oras@v2
+
+      - name: Parse tag / inputs
+        id: parse
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_BUNDLE: ${{ inputs.bundle }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            NAME="${INPUT_BUNDLE}"
+            VERSION="${INPUT_VERSION#v}"
+          else
+            # shellcheck source=tools/common.sh
+            . ./tools/common.sh
+            eval "$(parse_bundle_tag "${REF_NAME}")"
+          fi
+          [[ -n "${NAME}" && -n "${VERSION}" ]] || { echo "name/version not resolved"; exit 1; }
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=bundle/${NAME}/v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate manifest + tag alignment
+        env:
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          ./tools/validate-bundle.sh "${NAME}"
+          declared="$(python3 -c 'import yaml,sys; print(yaml.safe_load(open(sys.argv[1]))["name"])' bundles/${NAME}/bundle.yaml)"
+          if [[ "${declared}" != "${NAME}" ]]; then
+            echo "manifest.name ${declared@Q} does not match tag name ${NAME@Q}"; exit 1
+          fi
+
+      - name: Build deterministic tarball
+        env:
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: ./tools/bundle-build.sh "${NAME}" --version "${VERSION}" --output-dir out
+
+      - name: Publish GitHub Release asset
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.parse.outputs.tag }}
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release create "${TAG}" --title "${NAME} ${VERSION}" --notes "Release ${TAG}"
+          fi
+          gh release upload "${TAG}" "out/${NAME}-${VERSION}.tar.gz" "out/${NAME}-${VERSION}.tar.gz.sha256" --clobber
+
+      - name: Log in to GHCR
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME || github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          GHCR_TOKEN_SOURCE: ${{ secrets.GHCR_TOKEN != '' && 'GHCR_TOKEN' || 'GITHUB_TOKEN' }}
+        run: |
+          set -euo pipefail
+          echo "logging in to GHCR with ${GHCR_TOKEN_SOURCE}"
+          if [[ "${GHCR_TOKEN_SOURCE}" == "GITHUB_TOKEN" ]]; then
+            echo "::notice::GITHUB_TOKEN can only write GHCR packages linked to this repository. If this publish fails with write_package, configure GHCR_TOKEN with write:packages or grant this repository Actions access to the package."
+          fi
+          printf '%s' "${GHCR_TOKEN}" | oras login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+
+      - name: Push OCI artifact
+        id: oci
+        env:
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+          REGISTRY: ghcr.io/${{ github.repository_owner }}
+          GHCR_TOKEN_SOURCE: ${{ secrets.GHCR_TOKEN != '' && 'GHCR_TOKEN' || 'GITHUB_TOKEN' }}
+        run: |
+          set -euo pipefail
+          ./tools/bundle-publish.sh "${NAME}" --version "${VERSION}" --registry "${REGISTRY}" --input-dir out | tee publish.log
+          digest="$(grep -E '^DIGEST=' publish.log | tail -1 | cut -d= -f2)"
+          echo "ociRef=${REGISTRY}/declarest-metadata-bundles/${NAME}:${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate index.json
+        env:
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+          OCI_REF: ${{ steps.oci.outputs.ociRef }}
+          DIGEST: ${{ steps.oci.outputs.digest }}
+        run: |
+          set -euo pipefail
+          tarball_sha="$(awk '{print $1}' out/${NAME}-${VERSION}.tar.gz.sha256)"
+          ./tools/generate-index.sh --append-release "${NAME},${VERSION},${OCI_REF},${DIGEST},${tarball_sha}"
+
+      - name: Publish index.json as OCI
+        env:
+          REGISTRY: ghcr.io/${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          oras push "${REGISTRY}/declarest-metadata-bundles/index:latest" \
+            --artifact-type application/vnd.declarest.index.v1+json \
+            --annotation "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            index/index.json:application/json
+
+      - name: Commit index.json back to main
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NAME: ${{ steps.parse.outputs.name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp index/index.json /tmp/index-next.json
+          git fetch origin main
+          git checkout -B main origin/main
+          cp /tmp/index-next.json index/index.json
+          if git diff --quiet -- index/index.json; then
+            echo "index unchanged"; exit 0
+          fi
+          git add index/index.json
+          git commit -m "index: record release ${NAME} ${VERSION}"
+          git push origin main

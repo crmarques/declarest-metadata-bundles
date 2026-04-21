@@ -1,0 +1,9 @@
+.release/
+out/
+out*/
+*.tar.gz
+*.tar.gz.sha256
+__pycache__/
+*.pyc
+.venv/
+venv/

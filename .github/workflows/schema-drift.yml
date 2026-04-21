@@ -1,0 +1,87 @@
+name: Schema Drift
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/sync-schema.sh
+      - schemas/**
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Checkout declarest
+        uses: actions/checkout@v6.0.2
+        with:
+          repository: crmarques/declarest
+          ref: main
+          path: upstream-declarest
+          persist-credentials: false
+
+      - name: Fetch latest declarest schema
+        run: ./tools/sync-schema.sh --from-path "${GITHUB_WORKSPACE}/upstream-declarest"
+
+      - name: Open PR on drift
+        env:
+          GH_TOKEN: ${{ secrets.SCHEMA_DRIFT_PR_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet schemas/; then
+            echo "no drift"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          upstream_rev="$(awk -F= '/^declarestRev=/ {print $2}' schemas/SCHEMA_SOURCE)"
+          if [[ ! "${upstream_rev}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::schemas/SCHEMA_SOURCE has invalid declarestRev: ${upstream_rev}"
+            exit 1
+          fi
+          short_sha="${upstream_rev:0:8}"
+          branch="schema-drift-${short_sha}"
+          git fetch origin "${branch}" || true
+          git checkout -B "${branch}"
+          git add schemas/bundle.schema.json schemas/SCHEMA_SOURCE
+          git commit -m "schema: resync bundle.schema.json @ ${short_sha}"
+          git push --force-with-lease -u origin "HEAD:${branch}"
+          pr_url="https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1"
+          existing_pr="$(gh pr list --base main --head "${branch}" --state open --json url --jq '.[0].url // ""' 2>/dev/null || true)"
+          if [[ -n "${existing_pr}" ]]; then
+            echo "schema drift PR already open: ${existing_pr}"
+            exit 0
+          fi
+          pr_error="$(mktemp)"
+          if gh pr create \
+            --title "schema: resync bundle.schema.json @ ${short_sha}" \
+            --body "Automated resync from declarest/main." \
+            --base main --head "${branch}" 2>"${pr_error}"; then
+            exit 0
+          fi
+
+          cat "${pr_error}" >&2
+          if ! grep -Eiq "not permitted to create or approve pull requests|resource not accessible by integration" "${pr_error}"; then
+            exit 1
+          fi
+
+          echo "::warning::schema drift branch was pushed, but this token cannot create a pull request. Open ${pr_url}"
+          {
+            echo "### Schema drift branch pushed"
+            echo
+            echo "GitHub did not permit this workflow token to create a pull request."
+            echo
+            echo "- Branch: \`${branch}\`"
+            echo "- Open PR: ${pr_url}"
+            echo
+            echo "To fully automate PR creation, enable Actions PR creation for the repository or configure \`SCHEMA_DRIFT_PR_TOKEN\` with contents and pull-request write access."
+          } >> "${GITHUB_STEP_SUMMARY}"

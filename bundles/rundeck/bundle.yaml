@@ -1,0 +1,15 @@
+apiVersion: declarest.io/v1alpha1
+kind: MetadataBundle
+name: rundeck
+version: 0.1.0
+description: Metadata bundle for Rundeck project, job, node, and key storage APIs.
+deprecated: false
+declarest:
+  metadataRoot: metadata
+  openapi: openapi.yaml
+  compatibleDeclarest: ">=0.1.0"
+  compatibleManagedService:
+    product: rundeck
+    versions: ">=5.0.0 <6.0.0"
+distribution:
+  artifactTemplate: "rundeck-{version}.tar.gz"

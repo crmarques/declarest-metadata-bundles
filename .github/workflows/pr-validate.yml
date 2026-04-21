@@ -1,0 +1,85 @@
+name: PR Validate Bundles
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      bundles: ${{ steps.set.outputs.bundles }}
+      empty: ${{ steps.set.outputs.empty }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed bundles
+        id: set
+        run: |
+          set -euo pipefail
+          raw="$(./tools/detect-changed-bundles.sh)"
+          if [[ "${raw}" == "__ALL__" ]]; then
+            echo "shared infra changed — validating all bundles"
+            list="$(ls -1 bundles)"
+          else
+            list="${raw}"
+          fi
+          if [[ -z "${list// }" ]]; then
+            echo "empty=true" >> "$GITHUB_OUTPUT"
+            echo "bundles=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          json="$(printf '%s\n' "${list}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+          echo "empty=false" >> "$GITHUB_OUTPUT"
+          echo "bundles=${json}" >> "$GITHUB_OUTPUT"
+          echo "selected: ${json}"
+
+  validate:
+    needs: detect
+    if: needs.detect.outputs.empty == 'false'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bundle: ${{ fromJson(needs.detect.outputs.bundles) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14.4"
+
+      - name: Install Python deps
+        run: pip install --disable-pip-version-check --requirement requirements.txt
+
+      - name: Validate manifest + structure
+        run: ./tools/validate-bundle.sh "${{ matrix.bundle }}"
+
+      - name: Reproducible build (twice, diff sha256)
+        run: |
+          set -euo pipefail
+          ./tools/bundle-build.sh "${{ matrix.bundle }}" --output-dir run1
+          ./tools/bundle-build.sh "${{ matrix.bundle }}" --output-dir run2
+          diff run1/*.sha256 run2/*.sha256
+
+      - name: Upload dry-run tarball
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ matrix.bundle }}-dryrun
+          path: |
+            run1/*.tar.gz
+            run1/*.sha256
