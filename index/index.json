@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-04-21T01:37:28Z",
+  "generatedAt": "2026-04-21T01:38:36Z",
   "bundles": [
     {
       "name": "haproxy",
@@ -24,8 +24,16 @@
     },
     {
       "name": "keycloak",
-      "latest": null,
-      "versions": [],
+      "latest": "0.0.1",
+      "versions": [
+        {
+          "version": "0.0.1",
+          "ociRef": "ghcr.io/crmarques/declarest-metadata-bundles/keycloak:0.0.1",
+          "digest": "sha256:3aed88111c81a20789b3303b4196417c30b3e73f3a5207afa7fc776025866fd8",
+          "tarballSha256": "48ffef93480fdde721cbd67d97208f83cfa6f208d9450e17854fe9c1aab4da3b",
+          "releasedAt": "2026-04-21T01:38:36Z"
+        }
+      ],
       "description": "Metadata bundle for Keycloak Admin REST API.",
       "compatibleDeclarest": ">=0.1.0",
       "compatibleManagedService": {
