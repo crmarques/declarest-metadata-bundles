@@ -1,5 +1,5 @@
 upstream=declarest
 upstreamPath=schemas/bundle.schema.json
-declarestRev=744cbe053d273b7117021e49b881245f1f9001cc
+declarestRev=aadc4b2db7a9ad60919a6f86d97e87477ff5c952
 sha256=7d256c3144977ec62ff7151a17dc4794dcc990974bbf975a071ad5bef4fe91c4
-vendoredAt=2026-04-20T00:00:00Z
+vendoredAt=2026-07-13T09:48:48Z
